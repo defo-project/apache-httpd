@@ -128,12 +128,13 @@
 #define MODSSL_HAVE_OPENSSL_STORE 0
 #endif
 
-/*
- * Check if we have an ECH-enabled OpenSSL 
+/* Check if we have an ECH-enabled OpenSSL 
  * If we do then this symbol will be defined in ssl.h
  */
 #if defined(SSL_OP_ECH_GREASE)
 #define HAVE_OPENSSL_ECH
+#else
+#error mod_ssl requires OpenSSL with ECH in this build
 #endif
 
 #if (OPENSSL_VERSION_NUMBER < 0x0090801f)
