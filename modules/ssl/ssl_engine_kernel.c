@@ -1612,7 +1612,7 @@ int ssl_hook_Fixup(request_rec *r)
     char *outer_sni=NULL;
     char buf[PATH_MAX];
     memset(buf,0,PATH_MAX);
-    int echrv=SSL_ech_get_status((SSL*)ssl,&inner_sni,&outer_sni);
+    int echrv=SSL_ech_get1_status((SSL*)ssl,&inner_sni,&outer_sni);
     switch (echrv) {
     case SSL_ECH_STATUS_NOT_TRIED:
         snprintf(buf,PATH_MAX,"not attempted");
@@ -2506,7 +2506,7 @@ unsigned int ssl_callback_ECH(SSL *ssl, const char *str)
 
     char *inner_sni=NULL;
     char *outer_sni=NULL;
-    int echrv=SSL_ech_get_status((SSL*)ssl,&inner_sni,&outer_sni);
+    int echrv=SSL_ech_get1_status((SSL*)ssl,&inner_sni,&outer_sni);
     switch (echrv) {
     case SSL_ECH_STATUS_NOT_TRIED:
         ap_log_cerror(APLOG_MARK, APLOG_INFO, 0, c, APLOGNO(10497)

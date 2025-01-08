@@ -235,6 +235,13 @@ static int load_echkeys(SSL_CTX *ctx, const char *echdir, server_rec *s, apr_poo
         return -1;
     }
 
+    OSSL_ECHSTORE * const es = OSSL_ECHSTORE_new(NULL, NULL);
+    if (es == NULL) {
+        ap_log_error(APLOG_MARK, APLOG_EMERG, 0, s, APLOGNO(10507)
+                "load_echkeys: can't alloc store");
+        return -1;
+    }
+
     while ((apr_dir_read(&direntry, finfo_flags, dir)) == APR_SUCCESS) {
         const char *fname;
         if (direntry.filetype == APR_DIR) {
@@ -262,26 +269,38 @@ static int load_echkeys(SSL_CTX *ctx, const char *echdir, server_rec *s, apr_poo
         apr_finfo_t theinfo;
         if ( (apr_stat (&theinfo, fname, APR_FINFO_MIN, ptemp)==APR_SUCCESS) ) {
             keystried++;
-            if (SSL_CTX_ech_server_enable_file(ctx, fname,
-                                               SSL_ECH_USE_FOR_RETRY) != 1) {
-                ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, APLOGNO(10508)
-                    "load_echkeys: failed for %s (could be non-fatal)",fname);
-            } else {
+
+            BIO *in = BIO_new_file(fname, "r");
+            const int is_retry_config = OSSL_ECH_FOR_RETRY;
+            if (in != NULL
+                && 1 == OSSL_ECHSTORE_read_pem(es, in, is_retry_config)) {
                 ap_log_error(APLOG_MARK, APLOG_TRACE4, 0, s, APLOGNO(10509)
                     "load_echkeys: worked for %s",fname);
                 keysworked++;
             }
+            else {
+                ap_log_error(APLOG_MARK, APLOG_INFO, 0, s, APLOGNO(10508)
+                    "load_echkeys: failed for %s (could be non-fatal)",fname);
+            }
+            BIO_free_all(in);
         }
 
     }
     apr_dir_close(dir);
 
     int keysloaded=0;
-    if (!SSL_CTX_ech_server_get_key_status(ctx,&keysloaded)) {
+    if (!OSSL_ECHSTORE_num_keys(es, &keysloaded)) {
         ap_log_error(APLOG_MARK, APLOG_EMERG, 0, s, APLOGNO(10510)
             "SSL_CTX_ech_server_key_status failed - exiting");
         return -1;
     }
+    if (1 != SSL_CTX_set1_echstore(ctx, es)) {
+        ap_log_error(APLOG_MARK, APLOG_EMERG, 0, s, APLOGNO(10510)
+            "load_echkeys: SSL_CTX_set1_echstore failed");
+        OSSL_ECHSTORE_free(es);
+        return -1;
+    }
+    OSSL_ECHSTORE_free(es);
     if (keysworked==0) {
         ap_log_error(APLOG_MARK, APLOG_DEBUG, 0, s, APLOGNO(10511)
             "load_echkeys: didn't load new keys (%d tried/failed) but we have already some (%d) - continuing",
