@@ -1,10 +1,19 @@
-Description: add suexec-custom to the build system
+From: Stefan Fritsch <sf@debian.org>
+Date: Thu, 4 Jun 2026 13:32:13 +0100
+Subject: add suexec-custom to the build system
+
 Forwarded: not-needed
-Author: Stefan Fritsch <sf@debian.org>
 Last-Update: 2012-02-25
+---
+ Makefile.in         | 19 +++++++++++--------
+ support/Makefile.in | 12 ++++++++----
+ 2 files changed, 19 insertions(+), 12 deletions(-)
+
+diff --git a/Makefile.in b/Makefile.in
+index 7560567..a8ea8e7 100644
 --- a/Makefile.in
 +++ b/Makefile.in
-@@ -293,23 +293,26 @@
+@@ -304,23 +304,26 @@ install-man:
  install-suexec: install-suexec-$(INSTALL_SUEXEC)
  
  install-suexec-binary:
@@ -39,18 +48,20 @@ Last-Update: 2012-02-25
  
  x-local-distclean:
  	@rm -rf autom4te.cache
+diff --git a/support/Makefile.in b/support/Makefile.in
+index 2e0afd9..6669e5b 100644
 --- a/support/Makefile.in
 +++ b/support/Makefile.in
-@@ -1,7 +1,7 @@
- DISTCLEAN_TARGETS = apxs apachectl dbmmanage log_server_status \
- 	logresolve.pl phf_abuse_log.cgi split-logfile envvars-std
+@@ -3,7 +3,7 @@ DISTCLEAN_TARGETS = apxs apxs-ng apachectl dbmmanage dbmmanage-ng \
+ 	phf_abuse_log.cgi phf_abuse_log-ng.cgi split-logfile split-logfile-ng \
+ 	envvars-std
  
 -CLEAN_TARGETS = suexec
 +CLEAN_TARGETS = suexec-pristine suexec-custom
  
- bin_PROGRAMS = htpasswd htdigest htdbm ab logresolve httxt2dbm
+ bin_PROGRAMS = htpasswd htdigest htdbm firehose ab logresolve httxt2dbm
  sbin_PROGRAMS = htcacheclean rotatelogs $(NONPORTABLE_SUPPORT)
-@@ -72,9 +72,13 @@
+@@ -74,9 +74,13 @@ checkgid_OBJECTS = checkgid.lo
  checkgid: $(checkgid_OBJECTS)
  	$(LINK) $(checkgid_LTFLAGS) $(checkgid_OBJECTS) $(PROGRAM_LDADD)
  
