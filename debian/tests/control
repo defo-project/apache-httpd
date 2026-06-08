@@ -1,0 +1,101 @@
+Tests: systemdintegration
+Restrictions: allow-stderr, isolation-container, needs-root
+Depends: apache2, curl, wget
+
+Tests: run-test-suite_prefork
+Features: no-build-needed
+Restrictions: allow-stderr isolation-container breaks-testbed needs-root
+Depends: apache2,
+         apache2-dev,
+         build-essential,
+         libanyevent-perl,
+         libanyevent-websocket-client-perl,
+         libcrypt-ssleay-perl,
+         libdatetime-perl,
+         libfcgi-perl,
+         libhtml-parser-perl,
+         libhttp-dav-perl,
+         libnet-ssleay-perl,
+         libpcre2-dev,
+         libprotocol-http2-perl,
+         libtime-hires-perl,
+         libwww-perl,
+         perl-doc
+
+Tests: run-test-suite_worker
+Features: no-build-needed
+Restrictions: allow-stderr isolation-container breaks-testbed needs-root
+Depends: apache2,
+         apache2-dev,
+         build-essential,
+         libanyevent-perl,
+         libanyevent-websocket-client-perl,
+         libcrypt-ssleay-perl,
+         libdatetime-perl,
+         libfcgi-perl,
+         libhtml-parser-perl,
+         libhttp-dav-perl,
+         libnet-ssleay-perl,
+         libpcre2-dev,
+         libprotocol-http2-perl,
+         libtime-hires-perl,
+         libwww-perl,
+         perl-doc
+
+Tests: run-test-suite_event
+Features: no-build-needed
+Restrictions: allow-stderr isolation-container breaks-testbed needs-root
+Depends: apache2,
+         apache2-dev,
+         build-essential,
+         libanyevent-perl,
+         libanyevent-websocket-client-perl,
+         libcrypt-ssleay-perl,
+         libdatetime-perl,
+         libfcgi-perl,
+         libhtml-parser-perl,
+         libhttp-dav-perl,
+         libnet-ssleay-perl,
+         libpcre2-dev,
+         libprotocol-http2-perl,
+         libtime-hires-perl,
+         libwww-perl,
+         perl-doc
+
+Tests: default-mods, duplicate-module-load
+Restrictions: allow-stderr, needs-root
+Depends: apache2
+
+Tests: htcacheclean
+Restrictions: allow-stderr, needs-root, skippable
+Depends: apache2
+
+Tests: ssl-passphrase
+Restrictions: needs-root allow-stderr breaks-testbed
+Depends: apache2, curl, expect, ssl-cert
+
+Tests: check-http2
+Restrictions: needs-root allow-stderr breaks-testbed
+Depends: apache2, curl, nghttp2-client, ssl-cert
+
+Tests: chroot
+Features: no-build-needed
+Restrictions: needs-root allow-stderr breaks-testbed
+Depends: dpkg-dev, apache2, gcc, wget
+
+Tests: uwsgi
+Restrictions: allow-stderr, needs-root
+Depends: apache2,
+         netcat-openbsd | netcat-traditional,
+         rsync,
+         uwsgi,
+         uwsgi-plugin-python3,
+         wget
+
+Tests: CVE-2023-25690
+Restrictions: allow-stderr, isolation-container, needs-root, breaks-testbed
+Depends: apache2, curl, rsync, wget
+
+Test-Command: curl -L 'https://github.com/defo-project/ech-dev-utils/archive/refs/heads/main.tar.gz' | tar xz; cd ech-dev-utils-main; PACKAGING=1 scripts/testapache.sh
+Restrictions: needs-internet, needs-root, allow-stderr
+Depends: curl, ca-certificates, apache2

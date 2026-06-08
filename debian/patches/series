@@ -1,0 +1,14 @@
+fhs_compliance.patch
+no_LD_LIBRARY_PATH.patch
+suexec-CVE-2007-1742.patch
+customize_apxs.patch
+build_suexec-custom.patch
+reproducible_builds.diff
+fix-macro.patch
+cross.patch
+cross-build.patch
+0009-PATCH-modules-arch-unix-mod_unixd.ci-ap_unixd_setup_.patch
+debian-bug-1125778.patch
+CVE-2026-49975_1.patch
+CVE-2026-49975_2.patch
+0008-Fixes-for-Debian-build.patch

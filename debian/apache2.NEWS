@@ -1,0 +1,427 @@
+apache2 (2.4.65-4) unstable; urgency=medium
+
+  Apache2's integration with systemd has been improved,
+  and several hardening flags have been preconfigured for
+  its services.
+  .
+  ProtectHome is set to read-only by default.
+  As a result, CGI scripts executed via UserDir will not
+  be able to modify any content within the /home directory.
+  Additionally, WebDAV write access to /home will also be
+  disabled by default. Read-write access may be enabled
+  by overriding this setting, following a thorough
+  risk assessment.
+  Moreover, configuring Apache2 to write logs to the
+  /home directory will prevent the service from
+  starting and trigger an AH00091 error.
+  Additionally, the libapache2-mpm-itk module may be
+  considered, particularly in scenarios that require
+  per-user process isolation. libapache2-mpm-itk
+  allows Apache to run each virtual host or script
+  under a separate Unix user and group ID, thereby
+  enhancing security by limiting the impact of potential
+  vulnerabilities and preventing unauthorized access
+  between users. However, its use should be carefully
+  evaluated, taking into account potential performance overhead,
+  compatibility with other Apache modules, and the findings of
+  a thorough risk assessment.
+  .
+  KeyringMode is set to private by default, which means
+  Apache receives its own isolated kernel keyring.
+  While this enhances security by preventing unintended key
+  sharing, it can break interoperability if Apache needs
+  to exchange keys with other services, for example,
+  a backend authentication daemon.
+  In such cases, it is recommended to share the keyring using
+  an intermediate daemon that securely mediates access
+  between processes.
+  .
+  PrivateDevices is set to yes by default;
+  If Apache modules or scripts require access to specific
+  devices (using hardware crypto modules, or
+  interacting directly with webcams), this setting could break
+  functionality.  In such cases, it is advisable to expose
+  the required devices through a proxy or an agent service.
+  In case of CGI modules, it is recommended to use FCGI modules instead,
+  with tailored security hardening.
+  .
+  MemoryDenyWriteExecute is set to yes by default.
+  While this enhances security by preventing writable and
+  executable memory regions, it may cause issues with modules
+  that rely on JIT engines, such as mod_php with JIT-enabled
+  PHP, mod_lua, or custom interpreters. In such cases,
+  it is recommended to use PHP-FPM or FCGI modules instead.
+  .
+  ProtectSystem is set to full by default;
+  this mounts various system paths like /usr, /boot and
+  /etc as read-only, enhancing overall system integrity.
+  .
+  Some paths were also made inaccessible, including /boot, /root, /etc/apt
+  /etc/ssh, and /etc/sudoers*. This may cause certain CGI scripts to fail.
+  In such cases, it is recommended to use FCGI modules instead,
+  with tailored security hardening.
+  .
+  Other hardening flags, including DevicePolicy=closed,
+  ProtectClock=yes, LockPersonality=yes, ProtectControlGroups=yes,
+  ProtectHostname=yes, ProtectKernelLogs=yes, ProtectKernelModules=yes,
+  RestrictNamespaces=yes, RestrictRealtime=yes, and
+  SystemCallArchitectures=native, RestrictSUIDSGID=yes,
+  ProtectProc=invisible, ProcSubset=pid, RemoveIPC=yes
+  are generally safe to enable
+  and unlikely to cause compatibility problems.
+  .
+  If you need to override these defaults, you can do
+  so by running:
+  "sudo systemctl edit apache2.services" or
+  "sudo systemctl edit apache2@.services".
+  These commands create a drop-in override file located at:
+  /etc/systemd/system/<unit-name>.d/override.conf
+  Alternatively, you can create or manage this file directly
+  using Ansible or other administrative tooling to automate
+  configuration changes.
+
+ -- Bastien Roucariès <rouca@debian.org>  Thu, 14 Aug 2025 13:53:43 +0200
+
+apache2 (2.4.65-3) unstable; urgency=medium
+
+  The default LANG environment variable used by Apache,
+  and consequently inherited by WebDAV, PHP and certain CGI scripts,
+  has been changed from LANG=C (ASCII) to LANG=C.UTF-8 (UTF-8 Unicode).
+  .
+  The default setting may be changed by modifying the file
+  /etc/apache2/envvars, and restarting apache2 related process.
+  .
+  This modification may cause compatibility issues
+  in programs or modules that are not designed to handle locale
+  settings.
+  .
+  In some cases, it may be necessary to rebuild database indexes to
+  ensure proper character encoding and sorting behavior, particularly
+  when transitioning from ASCII-based collation to UTF-8,
+  which may interpret and order characters differently.
+
+ -- Bastien Roucariès <rouca@debian.org>  Fri, 01 Aug 2025 22:19:44 +0200
+
+apache2 (2.4.65-2) unstable; urgency=medium
+
+  Following the resolution of CVE-2025-23048,
+  some SSL-enabled websites may begin encountering
+  the error (AH02032):
+  .
+    Misdirected Request:
+    The client needs a new connection for this request as the
+    requested host name does not match the Server Name Indication
+    (SNI) in use for this connection.
+  .
+  This behavior is particularly noticeable with AWS Application
+  Load Balancers. Although they support intelligent SNI handling,
+  they do not (as of this writing) relay SNI data to the target
+  server, resulting in failed connections when hostnames don’t align.
+  .
+  Without an SNI provided by the client, there is nothing httpd
+  can do to determine which vhost/configuration should be
+  used to provide the correct certificate (and TLS authentication
+  eventually) whenever multiple vhosts listen on the same IP:port.
+  .
+  That's because reading the HTTP Host header necessarily has to
+  happen after the TLS handshake/auth/decryption (and later
+  renegotiation is not an option with TLSv1.3).
+  .
+  So those connections fall back to the first vhost declared on
+  the IP:port for the TLS handshake part, and if the request
+  Host header finally matches a different vhost with a different
+  TLS configuration it's rejected with AH02032.
+  .
+  Before 2.4.64 the check was not accurate and would allow that,
+  with security implications.
+  .
+  As a workaround, you may (after a risk analysis) generate a
+  wildcard certificate. If you’re managing multiple domains,
+  consolidate them into a single certificate by including each
+  wildcard domain as an alias. Then, update the Apache configuration
+  to reference this unified certificate.
+  .
+  Another possible workaround is to configure each virtual host to
+  listen on a separate port. This approach avoids SNI-related issues
+  by ensuring that each vhost is uniquely addressed through its own
+  connection endpoint, thereby allowing distinct TLS configurations
+  without ambiguity.
+  .
+  This error may also stem from a misconfigured HAProxy setup.
+  In such cases, enabling dynamic SNI handling on HAProxy might be
+  necessary to ensure that the correct hostname is passed through
+  during the TLS handshake. After risk analysis, it could be done
+  by using "sni req.hdr(Host)" directive.
+  .
+  This error may also be caused by a misconfigured Nginx proxy setup.
+  In such scenarios, enabling Server Name Indication (SNI) when connecting
+  to the backend may be necessary to ensure that the correct hostname is
+  transmitted during the TLS handshake. After conducting a risk analysis,
+  this can be achieved by configuring the "proxy_ssl_server_name on;"
+  and "proxy_ssl_name $host;" directives.
+
+ -- Bastien Roucariès <rouca@debian.org>  Fri, 25 Jul 2025 20:33:38 +0200
+
+apache2 (2.4.64-2) unstable; urgency=medium
+
+  RFC 8996 published by the IETF in March 2021,
+  mandates the formal deprecation of Transport
+  Layer Security (TLS) versions 1.0 and 1.1 due
+  to significant security vulnerabilities and limitations.
+  These older protocols lack support for modern cryptographic
+  algorithms and are prone to exploits that threaten data
+  confidentiality and integrity. In alignment with RFC 8996,
+  we disable by default these protocols.
+  .
+  This change can cause older applications or systems
+  to break if they haven't been updated to support
+  TLS 1.2 or 1.3.
+
+ -- Bastien Roucariès <rouca@debian.org>  Thu, 17 Jul 2025 18:03:42 +0200
+
+apache2 (2.4.10-2) unstable; urgency=low
+
+  The default period for which rotated log files are kept has been
+  reduced from one year to 14 days.
+
+ -- Stefan Fritsch <sf@debian.org>  Tue, 23 Sep 2014 22:25:06 +0200
+
+apache2 (2.4.1-1) unstable; urgency=low
+
+  This package introduces a new major release of the Apache HTTP server. It is
+  likely the site configuration needs changes to work with this release.
+  Notable changes which need special care are:
+
+  The module interface (ABI) has changed. If you have any locally compiled
+  modules, you have to re-compile them for apache2 2.4.
+
+  The authorization and authentication system has changed. Existing
+  configurations using deprecated Order/Allow/Deny directives need to be
+  upgraded to the new system. Please review upstream's "Authentication,
+  Authorization and Access Control Howto" [1]. There is a new module
+  "mod_access_compat", which is supposed to provide backward compatibility,
+  but it does not work well in practice.
+
+  Furthermore, MPMs are simple modules now. Thus, the MPM can be changed
+  at any time by (un-)loading a specific module. Be careful when upgrading. An
+  example of changing the MPM is given below:
+
+  a2dismod mpm_worker
+  a2enmod mpm_prefork
+
+  MPM ITK users should be advised, that ITK is not a MPM anymore. Instead, it
+  is a simple Apache module, expanding functionality of the prefork MPM. Thus,
+  users should switch to the prefork MPM and enable ITK as a module. The
+  upgrade scripts ensure this for the upgrade from Debian Wheezy.
+
+  We did change the security model for Apache in our default configuration. We
+  do not allow access to the file system outside /var/www and /usr/share.
+  If you are running virtual hosts or scripts outside these directories, you
+  need to whitelist them in your configuration to grant access through HTTP.
+  Special care must be taken if you are using a sub-directory in /srv to serve
+  your content as recommended by the File Hierarchy Standard (FHS). You must
+  allow access to your served directory explicity in the corresponding virtual
+  host, or by allowing access in apache2.conf as proposed.
+
+  Along the security model, we did also change the default Document Root, files
+  are served from. Previous releases served /var/www by default when no other
+  virtual host matched the request. Starting with this release, we changed the
+  default document root to /var/www/html, so that sensitive files from other
+  virtual hosts wich are typically put into some directory below /var/www are
+  not exposed by the default virtual host. This change further improves the out
+  of box security.
+
+  Moreover, the configuration mechanism in Debian has changed. All
+  configurations in sites-enabled and conf-enabled need a ".conf" suffix now.
+  The latter replaces the deprecated /etc/apache2/conf.d/ directory (which is
+  not supported any more) and works just like {sites,mods}-{available,enabled}
+  via the "a2enconf" tool. The upgrade tries to migrate known configuration
+  files from /etc/apache2/conf.d/ to /etc/apache2/conf-available/ - please
+  review these changes.
+
+  Note this means all existing sites are ignored until they get a ".conf"
+  suffix and are re-enabled by the use of a2ensite. The script in [3] can
+  automate that for simple cases. This change also includes Debian default
+  sites, so the default site has been renamed to 000-default to avoid naming
+  confusions. The rename of the config files to *.conf makes the special
+  handling inside apache2 to ignore *.dpkg-* backup files obsolete. This
+  special handling has been removed.
+
+  Users of mod_authn_dbm should switch to htdbm to manage their DBM user
+  databases. The pure-perl management utility "dbmmanage" was removed as it was
+  outdated and orphaned upstream.
+
+  Packagers are advised to review whether their packages comply with this
+  new version. Please see [2] for detailed documentation and instructions.
+
+  [1] http://httpd.apache.org/docs/2.4/howto/auth.html
+  [2] </usr/share/doc/apache2/PACKAGING>
+  [3] </usr/share/doc/apache2/migrate-sites.pl>
+
+ -- Arno Töll <arno@debian.org>  Fri, 23 July 2012 23:50:13 +0200
+
+apache2 (2.2.15-4) unstable; urgency=low
+
+  * Note to people using mod_proxy as forward proxy, i.e. with
+    'ProxyRequests on':
+    This release disables the configuration in mods-available/proxy.conf
+    by default. You should verify that access control for proxy access
+    still works as intended. This is especially important if you have
+    your forward proxy configuration in a different configuration file
+    than proxy.conf.
+
+ -- Stefan Fritsch <sf@debian.org>  Mon, 19 Apr 2010 22:36:57 +0200
+
+apache2 (2.2.15-1) unstable; urgency=low
+
+  * To fix a security vulnerability in the design of the SSL/TLS protocol
+    (CVE-2009-3555), the protocol had to be extended (RFC 5746). By default,
+    session renegotiation is no longer supported with old clients that do not
+    implement this extension. This breaks certain configurations with client
+    certificate authentication. If you still need to support old clients, you
+    may restore the old (insecure) behaviour by uncommenting the
+
+        SSLInsecureRenegotiation on
+
+    line in /etc/apache2/mods-available/ssl.conf
+
+  * This release adds and enables mod_reqtimeout, which limits the time
+    Apache waits for a client to send a complete request. This helps to
+    mitigate against certain denial of service attacks. In case of problems
+    with slow clients, the timeout values can be adjusted in
+    /etc/apache2/mods-available/reqtimeout.conf , or the module can be
+    disabled with "a2dismod reqtimeout".
+
+ -- Stefan Fritsch <sf@debian.org>  Sat, 28 Aug 2010 20:49:30 +0100
+
+apache2 (2.2.14-6) unstable; urgency=low
+
+  * Apache now uses the environment variables APACHE_RUN_DIR, APACHE_LOCK_DIR,
+    and APACHE_LOG_DIR in the default configuration.  If you have modified
+    /etc/apache2/envvars, make sure that these variables are set and exported.
+  * There is now some support for running multiple instances of Apache on the
+    same machine. See the documentation in /usr/share/doc/apache2.2-common for
+    details.
+
+ -- Stefan Fritsch <sf@debian.org>  Sun, 07 Feb 2010 13:56:59 +0100
+
+apache2 (2.2.13-2) unstable; urgency=high
+
+  * The new support for TLS Server Name Indication added in 2.2.12 causes
+    Apache to be stricter about certain misconfigurations involving name
+    based SSL virtual hosts. This may result in Apache refusing to start
+    with the logged error message:
+
+        Server should be SSL-aware but has no certificate configured
+        [Hint: SSLCertificateFile]
+
+    Up to 2.2.11, Apache accepted configurations where the necessary SSL
+    configuration statements were included in the first (default)
+    <Virtualhost *:443> block but not in subsequent <Virtualhost *:443>
+    blocks. Starting with 2.2.12, every VirtualHost block used with SSL must
+    contain the SSLEngine, SSLCertificateFile, and SSLCertificateKeyFile
+    directives (SSLCertificateKeyFile is optional in some cases).
+
+    When you encounter the above problem, the output of the command
+
+        egrep -ir '^[^#]*(sslcertificate|sslengine|virtualhost)' \
+            /etc/apache2/*conf* /etc/apache2/*enabled
+
+    may be useful to determine which VirtualHost sections need to be changed.
+
+    Also, formerly accidentially working constructs like
+
+        <VirtualHost *:80 *:443>
+
+    where one virtual host definition is used for both a non-ssl and a ssl
+    virtual host do not work anymore. You can achieve a similar effect with
+
+        <VirtualHost *:80>
+        Include /.../vhost.include
+        </VirtualHost>
+        <VirtualHost *:443>
+        SSLEngine on
+        SSLCertificateFile ...
+        Include /.../vhost.include
+        </VirtualHost>
+
+ -- Stefan Fritsch <sf@debian.org>  Wed, 16 Sep 2009 20:14:59 +0200
+
+apache2 (2.2.9-3) unstable; urgency=low
+
+  * The directive "NameVirtualHost *" has been changed to "NameVirtualHost
+    *:80". It has also been moved from sites-available/default to ports.conf.
+    This allows to ship a proper SSL default virtual host config in
+    sites-available/default-ssl, but it means that if you use several name
+    based virtual hosts:
+    
+    - you will have to change <VirtualHost *> to <VirtualHost *:80> in your
+      name based virtual hosts
+
+    - you need to add more NameVirtualHost directives if you use other ports
+      than 80 with name based virtual hosts. You may also have to add these
+      ports to the default virtual host in /etc/apache2/sites-available/default
+      (like this: "<VirtualHost *:80 *:81>").
+    
+    If you prefer to revert to the old setup instead (and don't need the
+    default-ssl host), just change "NameVirtualHost *:80" back to
+    "NameVirtualHost *" in ports.conf and "<VirtualHost *:80>" to
+    "<VirtualHost *>" in sites-available/default.
+
+  * For mod_disk_cache, caching is again disabled in disk_cache.conf by
+    default. It usually makes more sense to enable this on a per-virtual host
+    basis.
+
+ -- Stefan Fritsch <sf@debian.org>  Mon, 30 Jun 2008 19:47:52 +0200
+
+apache2 (2.2.8-5) unstable; urgency=low
+
+  * The suexec helper program needed for mod_suexec is now shipped in a
+    separate package, apache2-suexec, which is not installed by default.
+    You need to install this package manually if you are using mod_suexec.
+
+    There is now also the apache2-suexec-custom package, which contains a
+    customizable version of suexec which can be used with different document
+    roots than /var/www.
+
+ -- Stefan Fritsch <sf@debian.org>  Sun, 04 May 2008 20:24:00 +0200
+
+apache2 (2.2.8-1) unstable; urgency=low
+
+  * The Apache User and Group and the PidFile path are now configured in
+    /etc/apache2/envvars, to make it easier to use them in scripts
+    (like the init and logrotate scripts, and apache2ctl).
+    If you have changed these settings from their default values, you need to
+    adjust /etc/apache2/envvars.
+    This also means that starting apache2 with "apache2 -k start" is no longer
+    possible, you have to use /etc/init.d/apache2 or apache2ctl.
+
+ -- Stefan Fritsch <sf@debian.org>  Tue, 15 Jan 2008 21:41:23 +0100
+
+apache2 (2.2.4-2) unstable; urgency=low
+
+  * This version introduces some changes in the configuration layout and
+    defaults. You will probably have to adjust your configuration accordingly.
+
+    - Module specific configuration has been moved from 
+      /etc/apache2/apache2.conf to /etc/apache2/mods-available/*.conf for the
+      following modules: 
+        actions          alias              autoindex
+        info             mime               negotiation
+        setenvif         status
+
+    - AddDefaultCharset is again disabled by default. See
+      /etc/apache2/conf.d/charset
+
+    - "Listen 443" is automatically enabled in /etc/apache2/ports.conf if
+      mod_ssl is enabled.
+
+  * The NO_START functionality from /etc/default/apache2 has been removed. If
+    you don't want to start apache2 on boot, rename the S*apache2 start
+    symlinks as usual.
+
+  * To ensure that the disk cache does not grow indefinitely, htcacheclean is
+    now started when mod_disk_cache is enabled. The details can be configured
+    in /etc/default/apache2 .
+
+ -- Stefan Fritsch <sf@debian.org>  Mon, 09 Jul 2007 21:50:58 +0200

@@ -1,0 +1,42 @@
+From: Joe Orton <jorton@apache.org>
+Date: Fri, 15 Aug 2025 07:38:26 +0000
+Subject: [PATCH] * modules/arch/unix/mod_unixd.ci (ap_unixd_setup_child):
+   Do  not test euid=0 before going chroot MIME-Version: 1.0 Content-Type:
+ text/plain; charset=UTF-8 Content-Transfer-Encoding: 8bit
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+
+Nowaday chroot need CAP_SYS_CHROOT capability in its user namespace, and could
+work without root.
+
+Will allow to use chroot with lesser permission.
+
+Submitted by: Bastien Roucariès <rouca debian.org>
+PR: 69767
+Github: closes #549
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/trunk@1927804 13f79535-47bb-0310-9956-ffa450edef68
+bug: https://github.com/apache/httpd/pull/549
+origin: https://github.com/apache/httpd/commit/5c9c78d7859f6a45e8267f7017313002316c3257
+bug-debian: https://bugs.debian.org/1091855
+---
+ modules/arch/unix/mod_unixd.c | 7 -------
+ 1 file changed, 7 deletions(-)
+
+--- a/modules/arch/unix/mod_unixd.c
++++ b/modules/arch/unix/mod_unixd.c
+@@ -145,13 +145,6 @@
+     }
+ 
+     if (NULL != ap_unixd_config.chroot_dir) {
+-        if (geteuid()) {
+-            rv = errno;
+-            ap_log_error(APLOG_MARK, APLOG_ALERT, errno, NULL, APLOGNO(02158)
+-                         "Cannot chroot when not started as root");
+-            return rv;
+-        }
+-
+         if (chdir(ap_unixd_config.chroot_dir) != 0) {
+             rv = errno;
+             ap_log_error(APLOG_MARK, APLOG_ALERT, errno, NULL, APLOGNO(02159)
