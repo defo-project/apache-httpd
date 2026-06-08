@@ -1,11 +1,17 @@
-subject: cross build patch
-author: Helmut Grohne <helmut@subdivi.de>
+From: Helmut Grohne <helmut@subdivi.de>
+Date: Thu, 4 Jun 2026 13:32:13 +0100
+Subject: cross build patch
 
 forwarded: no
+---
+ acinclude.m4 | 13 +++----------
+ 1 file changed, 3 insertions(+), 10 deletions(-)
 
+diff --git a/acinclude.m4 b/acinclude.m4
+index 98d7c98..89a13b1 100644
 --- a/acinclude.m4
 +++ b/acinclude.m4
-@@ -721,16 +721,9 @@
+@@ -930,16 +930,9 @@ dnl Checks if the size of a void pointer is at least as big as a "long"
  dnl integer type.
  dnl
  AC_DEFUN([APACHE_CHECK_VOID_PTR_LEN], [
@@ -16,7 +22,7 @@ forwarded: no
 -{
 -    return sizeof(void *) < sizeof(long); 
 -}], [ap_cv_void_ptr_lt_long=no], [ap_cv_void_ptr_lt_long=yes], 
--    [ap_cv_void_ptr_lt_long=yes])])
+-    [ap_cv_void_ptr_lt_long="cross compile - not checked"])])
 -
 -if test "$ap_cv_void_ptr_lt_long" = "yes"; then
 +AC_CHECK_SIZEOF([void *])

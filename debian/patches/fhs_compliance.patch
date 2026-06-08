@@ -1,35 +1,21 @@
-Description: Fix up FHS file locations for apache2 droppings.
-Forwarded: not-needed
-Author: Adam Conrad <adconrad@0c3.net>
-Reviewed-By: Yadd <yadd@debian.org>
-Last-Update: 2026-05-05
+From: Adam Conrad <adconrad@0c3.net>
+Date: Thu, 4 Jun 2026 13:32:13 +0100
+Subject: Fix up FHS file locations for apache2 droppings.
 
---- a/configure
-+++ b/configure
-@@ -42443,16 +42443,17 @@
- 
- cat >>confdefs.h <<_ACEOF
- #define HTTPD_ROOT "${ap_prefix}"
-+#define HTTPD_ROOT "/etc/apache2"
- _ACEOF
- 
- 
- cat >>confdefs.h <<_ACEOF
--#define SERVER_CONFIG_FILE "${rel_sysconfdir}/${progname}.conf"
-+#define SERVER_CONFIG_FILE "${progname}.conf"
- _ACEOF
- 
- 
- cat >>confdefs.h <<_ACEOF
--#define AP_TYPES_CONFIG_FILE "${rel_sysconfdir}/mime.types"
-+#define AP_TYPES_CONFIG_FILE "mime.types"
- _ACEOF
- 
- 
+Forwarded: not-needed
+Reviewed-By: Yadd <yadd@debian.org>
+Last-Update: 2023-10-19
+---
+ configure.in    | 6 +++---
+ include/httpd.h | 4 ++--
+ 2 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/configure.in b/configure.in
+index 3f51b79..1e10e34 100644
 --- a/configure.in
 +++ b/configure.in
-@@ -934,11 +934,11 @@
- echo $MODLIST | $AWK -f $srcdir/build/build-modules-c.awk > modules.c
+@@ -1058,11 +1058,11 @@ AC_MSG_NOTICE([])
+ APACHE_GEN_CONFIG_VARS
  
  APR_EXPAND_VAR(ap_prefix, $prefix)
 -AC_DEFINE_UNQUOTED(HTTPD_ROOT, "${ap_prefix}",
@@ -43,18 +29,11 @@ Last-Update: 2026-05-05
  	[Location of the MIME types config file, relative to the Apache root directory])
  
  perlbin=`$ac_aux_dir/PrintPath perl`
---- a/include/ap_config_layout.h.in
-+++ b/include/ap_config_layout.h.in
-@@ -60,5 +60,6 @@
- #define DEFAULT_REL_LOGFILEDIR "@rel_logfiledir@"
- #define DEFAULT_EXP_PROXYCACHEDIR "@exp_proxycachedir@"
- #define DEFAULT_REL_PROXYCACHEDIR "@rel_proxycachedir@"
-+#define DEFAULT_PIDLOG "/run/apache2.pid"
- 
- #endif /* AP_CONFIG_LAYOUT_H */
+diff --git a/include/httpd.h b/include/httpd.h
+index 5db96fb..67f5f3d 100644
 --- a/include/httpd.h
 +++ b/include/httpd.h
-@@ -107,10 +107,10 @@
+@@ -108,10 +108,10 @@ extern "C" {
  #ifndef DOCUMENT_LOCATION
  #ifdef OS2
  /* Set default for OS/2 file system */

@@ -1,7 +1,15 @@
-Description: Remove LD_LIBRARY_PATH from envvars-std
+From: Adam Conrad <adconrad@0c3.net>
+Date: Thu, 4 Jun 2026 13:32:13 +0100
+Subject: Remove LD_LIBRARY_PATH from envvars-std
+
 Forwarded: no
-Author: Adam Conrad <adconrad@0c3.net>
 Last-Update: 2012-04-15
+---
+ support/envvars-std.in | 7 -------
+ 1 file changed, 7 deletions(-)
+
+diff --git a/support/envvars-std.in b/support/envvars-std.in
+index 9493bc7..2bb3412 100644
 --- a/support/envvars-std.in
 +++ b/support/envvars-std.in
 @@ -18,11 +18,4 @@
