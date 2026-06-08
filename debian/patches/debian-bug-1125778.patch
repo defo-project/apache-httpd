@@ -1,0 +1,27 @@
+From: Giovanni Bechis <gbechis@apache.org>
+Date: Wed, 21 Jan 2026 08:57:27 +0000
+Subject: add charset in the document if specified in IndexOptions bz #69930
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/trunk@1931451 13f79535-47bb-0310-9956-ffa450edef68
+
+origin: https://github.com/apache/httpd/commit/6ab19469cc43b3dc75e4b041d6a199822655c00f
+bug-debian: https://bugs.debian.org/1125778
+---
+ modules/generators/mod_autoindex.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+--- a/modules/generators/mod_autoindex.c
++++ b/modules/generators/mod_autoindex.c
+@@ -176,7 +176,11 @@
+     if (xhtml) {
+         ap_rvputs(r, DOCTYPE_XHTML_1_0T,
+                   "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n"
+-                  " <head>\n  <title>Index of ", title,
++                  " <head>\n", NULL);
++	if(d->charset != NULL) {
++          ap_rvputs(r, "  <meta http-equiv=\"Content-Type\" content=\"text/html; charset=", d->charset, "\" />\n", NULL);
++	}
++      	ap_rvputs(r, "  <title>Index of ", title,
+                   "</title>\n", NULL);
+     } else {
+         ap_rvputs(r, DOCTYPE_HTML_4_01,

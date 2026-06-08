@@ -1,0 +1,145 @@
+#!/bin/bash
+set -eux
+
+RC=0
+fail () {
+	echo "FAIL: $@" >&2
+	RC=1
+}
+
+
+function exit_handler()
+{
+    systemctl stop apache2 || true
+    if test -f /run/uwsgi/uwsgi.pid; then
+	kill -TERM $(cat /run/uwsgi/uwsgi.pid)
+    fi
+    cat /var/log/apache2/error.log || true
+    cat /var/log/apache2/access.log || true
+    cat /var/log/apache2/uwsgi.log || true
+    cat /var/log/apache2/uwsgi.error.log || true
+}
+trap exit_handler EXIT
+
+
+a2enmod proxy
+a2enmod proxy_uwsgi
+
+rsync -a /var/log/apache2 "$AUTOPKGTEST_ARTIFACTS"
+rm /var/log/apache2/*
+#mount -o bind "$AUTOPKGTEST_ARTIFACTS/apache2" /var/log/apache2
+
+tee /etc/apache2/sites-available/000-default.conf <<'EOF'
+<VirtualHost *:80>
+	# The ServerName directive sets the request scheme, hostname and port that
+	# the server uses to identify itself. This is used when creating
+	# redirection URLs. In the context of virtual hosts, the ServerName
+	# specifies what hostname must appear in the request's Host: header to
+	# match this virtual host. For the default virtual host (this file) this
+	# value is not decisive as it is used as a last resort host regardless.
+	# However, you must set it for any further virtual host explicitly.
+	#ServerName www.example.com
+
+	ServerAdmin webmaster@localhost
+	DocumentRoot /var/www/html
+
+	# Available loglevels: trace8, ..., trace1, debug, info, notice, warn,
+	# error, crit, alert, emerg.
+	# It is also possible to configure the loglevel for particular
+	# modules, e.g.
+	#LogLevel info ssl:warn
+
+	ErrorLog ${APACHE_LOG_DIR}/error.log
+	CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+	# For most configuration files from conf-available/, which are
+	# enabled or disabled at a global level, it is possible to
+	# include a line for only one particular virtual host. For example the
+	# following line enables the CGI configuration for this host only
+	# after it has been globally disabled with "a2disconf".
+	#Include conf-available/serve-cgi-bin.conf
+	ProxyPass "/uwsgi" "unix:/run/uwsgi/test.socket|uwsgi://localhost"
+</VirtualHost>
+EOF
+
+systemctl restart apache2
+
+test -d /etc/uwsgi/ || mkdir /etc/uwsgi
+
+
+
+tee /etc/systemd/system/uwsgi-app@.socket <<EOF
+[Unit]
+Description=Socket for uWSGI app %i
+
+[Socket]
+ListenStream=/run/uwsgi/%i.socket
+SocketUser=www-%i
+SocketGroup=www-data
+SocketMode=0660
+
+[Install]
+WantedBy=sockets.target
+EOF
+
+tee /etc/systemd/system/uwsgi-app@.service <<EOF
+[Unit]
+Description=%i uWSGI app
+After=syslog.target
+
+[Service]
+ExecStart=/usr/bin/uwsgi \
+        --ini /etc/uwsgi/apps-available/%i.ini \
+        --socket /run/uwsgi/%i.socket
+User=www-%i
+Group=www-data
+Restart=on-failure
+KillSignal=SIGQUIT
+Type=notify
+StandardError=file:/var/log/apache2/uwsgi.error.log
+StandardOutput=file:/var/log/apache2/uwsgi.log
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+
+useradd uwsgi_test
+useradd www-test
+
+tee /etc/uwsgi/apps-available/test.ini <<EOF
+[uwsgi]
+chdir=/tmp
+master=True
+cheap=True
+die-on-idle=True
+manage-script-name=True
+plugin=python3
+wsgi-file=/tmp/uwsgi.py
+EOF
+
+
+tee /tmp/uwsgi.py <<'EOF'
+import wsgiref.headers as h
+def application(env, start_response):
+    buggy_header=('buggy','buggy#\r\nbuggy2:buggy2')
+    start_response('200 OK', [('Content-Type','text/html'),buggy_header])
+    ret = "Hello World Headers {}".format(env).encode()
+    return [ret]
+EOF
+chown 'www-test:www-test' /tmp/uwsgi.py
+chmod +x /tmp/uwsgi.py
+
+systemctl enable uwsgi-app@test.socket
+systemctl enable uwsgi-app@test.service
+systemctl start uwsgi-app@test.socket
+systemctl restart apache2
+
+
+wget -S -q --output-document - http://localhost/uwsgi
+wget -q --output-document - http://localhost/uwsgi | grep "^Hello World"
+
+exit $RC
+-

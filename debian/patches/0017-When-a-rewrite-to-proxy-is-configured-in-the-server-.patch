@@ -1,0 +1,154 @@
+From: Ruediger Pluem <rpluem@apache.org>
+Date: Mon, 14 Oct 2024 06:56:45 +0000
+Subject: When a rewrite to proxy is configured in the server config,
+ a check is made to make sure mod_proxy is active.
+
+But the same is not done if a rewrite to proxy is configured in an .htaccess file.
+
+Basically this patch is the block of code from hook_uri2file that does the proxy check, copied to hook_fixup.
+
+Patch provided by Michael Streeter [mstreeter1 gmail.com], slightly modified to use a new APLOGNO
+PR 56264
+
+mod_rewrite, mod_proxy: mod_proxy to cononicalize rewritten [P] URLs. PR 69235.
+
+When mod_rewrite sets a "proxy:" URL with [P], it should be canonicalized by
+mod_proxy still, notably to handle any "unix:" local socket part.
+
+To avoid double encoding in perdir context, a follow up commit should remove the
+ap_escape_uri() done in mod_rewrite since it's now on mod_proxy to canonicalize,
+per PR 69260.
+
+* Leave the proper escaping of the URL and the adding of r->args to the
+  proxy module which runs after us after r1920570.
+  Just take care to add r->args in case the proxy rule has the
+  [NE] flag set and tell the proxy module to not escape in this case.
+
+* Mention the additional bug
+
+Submitted by: jailletc36, ylavic, rpluem
+Reviewed by: rpluem, ylavic, covener
+
+Github: closes #484
+
+git-svn-id: https://svn.apache.org/repos/asf/httpd/httpd/branches/2.4.x@1921299 13f79535-47bb-0310-9956-ffa450edef68
+origin: backport, https://github.com/apache/httpd/commit/88ebfaa60d3a1987dda88d74eb820294c16edc3d
+bug: https://bz.apache.org/bugzilla/show_bug.cgi?id=69241
+bug-debian: https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=1081266
+---
+ modules/mappers/mod_rewrite.c | 38 ++++++++++++++++++++++++++------------
+ modules/proxy/mod_proxy.c     | 13 ++++++-------
+ 2 files changed, 32 insertions(+), 19 deletions(-)
+
+diff --git a/modules/mappers/mod_rewrite.c b/modules/mappers/mod_rewrite.c
+index c8c5dbd..13f4dde 100644
+--- a/modules/mappers/mod_rewrite.c
++++ b/modules/mappers/mod_rewrite.c
+@@ -5009,7 +5009,7 @@ static int hook_uri2file(request_rec *r)
+             }
+             if ((r->args != NULL)
+                 && ((r->proxyreq == PROXYREQ_PROXY)
+-                    || (rulestatus == ACTION_NOESCAPE))) {
++                    || apr_table_get(r->notes, "proxy-nocanon"))) {
+                 /* see proxy_http:proxy_http_canon() */
+                 r->filename = apr_pstrcat(r->pool, r->filename,
+                                           "?", r->args, NULL);
+@@ -5300,13 +5300,28 @@ static int hook_fixup(request_rec *r)
+         if (to_proxyreq) {
+             /* it should go on as an internal proxy request */
+ 
+-            /* make sure the QUERY_STRING and
+-             * PATH_INFO parts get incorporated
++            /* check if the proxy module is enabled, so
++             * we can actually use it!
++             */
++            if (!proxy_available) {
++                ap_log_rerror(APLOG_MARK, APLOG_ERR, 0, r, APLOGNO(10160)
++                              "attempt to make remote request from mod_rewrite "
++                              "without proxy enabled: %s", r->filename);
++                return HTTP_FORBIDDEN;
++            }
++
++            if (rulestatus == ACTION_NOESCAPE) {
++                apr_table_setn(r->notes, "proxy-nocanon", "1");
++            }
++
++            /* make sure the QUERY_STRING gets incorporated in the case
++             * [NE] was specified on the Proxy rule. We are preventing
++             * mod_proxy canon handler from incorporating r->args as well
++             * as escaping the URL.
+              * (r->path_info was already appended by the
+              * rewriting engine because of the per-dir context!)
+              */
+-            if (r->args != NULL) {
+-                /* see proxy_http:proxy_http_canon() */
++            if ((r->args != NULL) && apr_table_get(r->notes, "proxy-nocanon")) {
+                 r->filename = apr_pstrcat(r->pool, r->filename,
+                                           "?", r->args, NULL);
+             }
+@@ -5606,10 +5621,7 @@ static void ap_register_rewrite_mapfunc(char *name, rewrite_mapfunc_t *func)
+ 
+ static void register_hooks(apr_pool_t *p)
+ {
+-    /* fixup after mod_proxy, so that the proxied url will not
+-     * escaped accidentally by mod_proxy's fixup.
+-     */
+-    static const char * const aszPre[]={ "mod_proxy.c", NULL };
++    static const char * const aszModProxy[] = { "mod_proxy.c", NULL };
+ 
+     /* make the hashtable before registering the function, so that
+      * other modules are prevented from accessing uninitialized memory.
+@@ -5621,10 +5633,12 @@ static void register_hooks(apr_pool_t *p)
+     ap_hook_pre_config(pre_config, NULL, NULL, APR_HOOK_MIDDLE);
+     ap_hook_post_config(post_config, NULL, NULL, APR_HOOK_MIDDLE);
+     ap_hook_child_init(init_child, NULL, NULL, APR_HOOK_MIDDLE);
+-
+-    ap_hook_fixups(hook_fixup, aszPre, NULL, APR_HOOK_FIRST);
++    
++    /* allow to change the uri before mod_proxy takes over it */
++    ap_hook_translate_name(hook_uri2file, NULL, aszModProxy, APR_HOOK_FIRST);
++    /* fixup before mod_proxy so that a [P] URL gets fixed up there */
++    ap_hook_fixups(hook_fixup, NULL, aszModProxy, APR_HOOK_FIRST);
+     ap_hook_fixups(hook_mimetype, NULL, NULL, APR_HOOK_LAST);
+-    ap_hook_translate_name(hook_uri2file, NULL, NULL, APR_HOOK_FIRST);
+ }
+ 
+     /* the main config structure */
+diff --git a/modules/proxy/mod_proxy.c b/modules/proxy/mod_proxy.c
+index 16cd5aa..4047d58 100644
+--- a/modules/proxy/mod_proxy.c
++++ b/modules/proxy/mod_proxy.c
+@@ -3349,27 +3349,26 @@ static int proxy_pre_config(apr_pool_t *pconf, apr_pool_t *plog,
+ }
+ static void register_hooks(apr_pool_t *p)
+ {
+-    /* fixup before mod_rewrite, so that the proxied url will not
+-     * escaped accidentally by our fixup.
+-     */
+-    static const char * const aszSucc[] = { "mod_rewrite.c", NULL};
+     /* Only the mpm_winnt has child init hook handler.
+      * make sure that we are called after the mpm
+      * initializes.
+      */
+     static const char *const aszPred[] = { "mpm_winnt.c", "mod_proxy_balancer.c",
+                                            "mod_proxy_hcheck.c", NULL};
++    static const char * const aszModRewrite[] = { "mod_rewrite.c", NULL };
++
+     /* handler */
+     ap_hook_handler(proxy_handler, NULL, NULL, APR_HOOK_FIRST);
+     /* filename-to-URI translation */
+     ap_hook_pre_translate_name(proxy_pre_translate_name, NULL, NULL,
+                                APR_HOOK_MIDDLE);
+-    ap_hook_translate_name(proxy_translate_name, aszSucc, NULL,
++    /* mod_rewrite has a say on the uri before proxy translation */
++    ap_hook_translate_name(proxy_translate_name, aszModRewrite, NULL,
+                            APR_HOOK_FIRST);
+     /* walk <Proxy > entries and suppress default TRACE behavior */
+     ap_hook_map_to_storage(proxy_map_location, NULL,NULL, APR_HOOK_FIRST);
+-    /* fixups */
+-    ap_hook_fixups(proxy_fixup, NULL, aszSucc, APR_HOOK_FIRST);
++    /* fixup after mod_rewrite so that a [P] URL from there gets fixed up */
++    ap_hook_fixups(proxy_fixup, aszModRewrite, NULL, APR_HOOK_FIRST);
+     /* post read_request handling */
+     ap_hook_post_read_request(proxy_detect, NULL, NULL, APR_HOOK_FIRST);
+     /* pre config handling */

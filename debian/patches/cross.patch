@@ -1,0 +1,20 @@
+From: Helmut Grohne <helmut@subdivi.de>
+Date: Fri, 15 Aug 2025 15:49:33 +0200
+Subject: cross build
+
+Forwarded: https://github.com/apache/httpd/pull/548
+---
+ configure.in | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/configure.in
++++ b/configure.in
+@@ -393,7 +393,7 @@
+ dnl ## Check for programs
+ 
+ AC_PATH_PROG(RM, rm)
+-AC_PATH_PROG(PKGCONFIG, pkg-config)
++AC_PATH_TOOL(PKGCONFIG, pkg-config)
+ AC_PATH_PROG(RSYNC, rsync)
+ AC_PATH_PROG(SVN, svn)
+ AC_PROG_AWK

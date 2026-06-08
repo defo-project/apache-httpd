@@ -1,0 +1,25 @@
+manifest-version: "0.1"
+packages:
+    apache2-suexec-pristine:
+        transformations:
+         - path-metadata:
+              path: usr/lib/apache2/suexec-pristine
+              group: www-data
+              mode: "04754"
+    apache2-suexec-custom:
+        transformations:
+         - path-metadata:
+              path: usr/lib/apache2/suexec-custom
+              group: www-data
+              mode: "04754"
+    apache2:
+        transformations:
+         - path-metadata:
+              path: var/cache/apache2/mod_cache_disk
+              owner: www-data
+              group: www-data
+         - path-metadata:
+              path: var/log/apache2
+              owner: root
+              group: adm
+              mode: o-rx
