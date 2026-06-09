@@ -49,7 +49,7 @@ foreach my $h (@html) {
 		elsif ( -f "$SRC/$h.$l" ) {
 			conv("$SRC/$h.$l", "$tdir$h", $h, $updir);
 		}
-		else {
+		elsif ( ! -e "$tdir$h" ) {
 			symlink("$updir/en/$h", "$tdir$h");
 		}
 		
