@@ -11,7 +11,7 @@ Last-Update: 2023-10-19
  2 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/configure.in b/configure.in
-index 3f51b79..1e10e34 100644
+index 124cdb5..50ed29d 100644
 --- a/configure.in
 +++ b/configure.in
 @@ -1058,11 +1058,11 @@ AC_MSG_NOTICE([])

@@ -4,6 +4,5 @@ suexec-CVE-2007-1742.patch
 customize_apxs.patch
 build_suexec-custom.patch
 reproducible_builds.diff
-cross.patch
 cross-build.patch
 0008-Fixes-for-Debian-build.patch
