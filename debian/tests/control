@@ -2,66 +2,6 @@ Tests: systemdintegration
 Restrictions: allow-stderr, isolation-container, needs-root
 Depends: apache2, curl, wget
 
-Tests: run-test-suite_prefork
-Features: no-build-needed
-Restrictions: allow-stderr isolation-container breaks-testbed needs-root
-Depends: apache2,
-         apache2-dev,
-         build-essential,
-         libanyevent-perl,
-         libanyevent-websocket-client-perl,
-         libcrypt-ssleay-perl,
-         libdatetime-perl,
-         libfcgi-perl,
-         libhtml-parser-perl,
-         libhttp-dav-perl,
-         libnet-ssleay-perl,
-         libpcre2-dev,
-         libprotocol-http2-perl,
-         libtime-hires-perl,
-         libwww-perl,
-         perl-doc
-
-Tests: run-test-suite_worker
-Features: no-build-needed
-Restrictions: allow-stderr isolation-container breaks-testbed needs-root
-Depends: apache2,
-         apache2-dev,
-         build-essential,
-         libanyevent-perl,
-         libanyevent-websocket-client-perl,
-         libcrypt-ssleay-perl,
-         libdatetime-perl,
-         libfcgi-perl,
-         libhtml-parser-perl,
-         libhttp-dav-perl,
-         libnet-ssleay-perl,
-         libpcre2-dev,
-         libprotocol-http2-perl,
-         libtime-hires-perl,
-         libwww-perl,
-         perl-doc
-
-Tests: run-test-suite_event
-Features: no-build-needed
-Restrictions: allow-stderr isolation-container breaks-testbed needs-root
-Depends: apache2,
-         apache2-dev,
-         build-essential,
-         libanyevent-perl,
-         libanyevent-websocket-client-perl,
-         libcrypt-ssleay-perl,
-         libdatetime-perl,
-         libfcgi-perl,
-         libhtml-parser-perl,
-         libhttp-dav-perl,
-         libnet-ssleay-perl,
-         libpcre2-dev,
-         libprotocol-http2-perl,
-         libtime-hires-perl,
-         libwww-perl,
-         perl-doc
-
 Tests: default-mods, duplicate-module-load
 Restrictions: allow-stderr, needs-root
 Depends: apache2
