@@ -56,8 +56,8 @@ index 2e0afd9..6669e5b 100644
  	phf_abuse_log.cgi phf_abuse_log-ng.cgi split-logfile split-logfile-ng \
  	envvars-std
  
--CLEAN_TARGETS = suexec
-+CLEAN_TARGETS = suexec-pristine suexec-custom
+-CLEAN_TARGETS = suexec a2md/a2md
++CLEAN_TARGETS = suexec-pristine a2md/a2md suexec-custom
  
  bin_PROGRAMS = htpasswd htdigest htdbm firehose ab logresolve httxt2dbm
  sbin_PROGRAMS = htcacheclean rotatelogs $(NONPORTABLE_SUPPORT)
