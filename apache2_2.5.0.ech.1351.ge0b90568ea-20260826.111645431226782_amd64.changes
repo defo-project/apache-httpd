@@ -1,0 +1,69 @@
+Format: 1.8
+Date: Mon, 23 Mar 2026 16:18:38 +0100
+Source: apache2
+Binary: apache2 apache2-bin apache2-bin-dbgsym apache2-data apache2-dev apache2-doc apache2-ssl-dev apache2-suexec-custom apache2-suexec-custom-dbgsym apache2-suexec-pristine apache2-suexec-pristine-dbgsym apache2-utils apache2-utils-dbgsym
+Architecture: amd64 all
+Version: 1:2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782
+Distribution: testing
+Urgency: medium
+Maintainer: Debian Apache Maintainers <debian-apache@lists.debian.org>
+Changed-By: Jochen Sprickerhof <jspricke@debian.org>
+Description:
+ apache2    - Apache HTTP Server
+ apache2-bin - Apache HTTP Server (modules and other binary files)
+ apache2-data - Apache HTTP Server (common files)
+ apache2-dev - Apache HTTP Server (development headers)
+ apache2-doc - Apache HTTP Server (on-site documentation)
+ apache2-ssl-dev - Apache HTTP Server (mod_ssl development headers)
+ apache2-suexec-custom - Apache HTTP Server configurable suexec program for mod_suexec
+ apache2-suexec-pristine - Apache HTTP Server standard suexec program for mod_suexec
+ apache2-utils - Apache HTTP Server (utility programs for web servers)
+Changes:
+ apache2 (1:2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782) UNRELEASED; urgency=medium
+ .
+   * Add DEfO patches
+Checksums-Sha1:
+ 400da7476c69118af8f0671220dc12f5d97c3870 4097000 apache2-bin-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 7fa6d6e463639c820772f281ad77130a6a6a1872 1388652 apache2-bin_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 7ba870500fa440f153f8e184281ccdc9bd27f155 165448 apache2-data_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_all.deb
+ 3d859f494d56c6929dcb1416e6a7909c03073b22 240460 apache2-dev_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 6dbb8b8a27949fc8d0b1a515cdf5a84adc665dee 5002920 apache2-doc_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_all.deb
+ be2e7f35e24156c4829aa1d39d31b1da56b00922 3204 apache2-ssl-dev_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 4a4081fc9a8e5f49f424de5bfbaac8ecdde8b1dc 12988 apache2-suexec-custom-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 18cfb8a34c77009ce65c39a14bb18dd00c7db9c7 58056 apache2-suexec-custom_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 57f6e33e8694bc5c39641c7a5f341bfae7f463e1 11552 apache2-suexec-pristine-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 48bc4e158a7765079b576625e740408a25bb4dc4 56504 apache2-suexec-pristine_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 4148f33c0709ddd0a40e78a2f1ea442c154c0351 128136 apache2-utils-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 81300c5dbd54bad64122d062440622881a62b5be 129708 apache2-utils_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 52e8df26ff8cd7434119d2d33faa8f02a6562ec4 13018 apache2_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.buildinfo
+ d58245757467cc4bf1f14af9cd295eb51fff050f 136364 apache2_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+Checksums-Sha256:
+ da5d6b40c81a4e388f367a399aca1e06a3d2f92fba28f401fd21a28be2c3ee1d 4097000 apache2-bin-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 11093b818a9ad3bbc878158faa6a8eed1644131ba66d34e29f71874e69de2abb 1388652 apache2-bin_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 7e22bf922896205f7d5ae62c5caaf807d5216e2ca7904107bcc44973da8cafe1 165448 apache2-data_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_all.deb
+ cfec9b9ce5f29b604787d5be460a092404bb9560bb195c3eef2861dcdd8b1c3a 240460 apache2-dev_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 2aba27491eb21372fd342e38ab9f33972c2aa4c1cb292d93784c683032b53fef 5002920 apache2-doc_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_all.deb
+ 3a592af53fc0efbfe5cc04f4424f0b3edad614e377b598d2ebb0aa33f37a5aad 3204 apache2-ssl-dev_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 8fb463e49ba8485b411d4f760be1b4ad42cfd465b62319e35d6530ffca558860 12988 apache2-suexec-custom-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 7f7f4f61044504149351c36f5e3444985feb5b4991636148a1af34245a1ca3fe 58056 apache2-suexec-custom_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 06f86542594826fc219475d7a49621bd4a5441d6e6e1f550c45ed06864b0a9e0 11552 apache2-suexec-pristine-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 26705f1e47739d6017251d98511239eaf05ab98f7218eb2094b4891e1bb83e13 56504 apache2-suexec-pristine_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 6c4dd13e300b955d953821ef27e4e3325e36027f4fd15990cbcac779889fd694 128136 apache2-utils-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 9971107936503ea9c47d6e943ebf718cec4ad9a69730ed23eb2dfbac8f02819d 129708 apache2-utils_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 5e7c1272d2a1898976eafe4956e1bbc1f2c1edc36734173ce922c0882bb5aabf 13018 apache2_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.buildinfo
+ 268fb7134fdc6be8c2bc0ef0dddf559f1ba3fa10de154026a0f570acf582b49b 136364 apache2_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+Files:
+ 450e06ebf0bfa0d93960847c38f5b84c 4097000 debug optional apache2-bin-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 84deee883c62e3be81701489dfb67188 1388652 httpd optional apache2-bin_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 0185800624c267f6974ad0003a5b90ff 165448 httpd optional apache2-data_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_all.deb
+ 4c925836b158622dc02596801a851331 240460 httpd optional apache2-dev_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 98eabe614b250932ecceec44485d141f 5002920 doc optional apache2-doc_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_all.deb
+ b2a2fe9736f6e5d1708cd5cce008711d 3204 httpd optional apache2-ssl-dev_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 8d8550d4e53b1ee7f77cba95370a9324 12988 debug optional apache2-suexec-custom-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 331680c027530a71d7f5abe3e44dbef9 58056 httpd optional apache2-suexec-custom_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ cd8611fa3f84a2a09c5bfc31fdcacb38 11552 debug optional apache2-suexec-pristine-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 372d534c58b50cffe4e23dbbfa8bb73c 56504 httpd optional apache2-suexec-pristine_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ a4eca2651481de7e5e5945103898ab02 128136 debug optional apache2-utils-dbgsym_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 7344f1d71572ac2a3214e39f889e75ec 129708 httpd optional apache2-utils_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
+ 7aca4a6bb9a2ecc156e552ede8746744 13018 httpd optional apache2_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.buildinfo
+ 2b71d180fe2d6ee01429cbcd443317c5 136364 httpd optional apache2_2.5.0.ech.1351.ge0b90568ea-20260826.111645431226782_amd64.deb
