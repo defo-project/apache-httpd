@@ -56,11 +56,11 @@ index 2e0afd9..6669e5b 100644
  	phf_abuse_log.cgi phf_abuse_log-ng.cgi split-logfile split-logfile-ng \
  	envvars-std
  
--CLEAN_TARGETS = suexec a2md/a2md
-+CLEAN_TARGETS = suexec-pristine a2md/a2md suexec-custom
+-CLEAN_TARGETS = suexec
++CLEAN_TARGETS = suexec-pristine suexec-custom
  
  bin_PROGRAMS = htpasswd htdigest htdbm firehose ab logresolve httxt2dbm
- sbin_PROGRAMS = htcacheclean rotatelogs $(NONPORTABLE_SUPPORT)
+ sbin_PROGRAMS = htcacheclean rotatelogs $(EXTRA_SBIN_PROGRAMS)
 @@ -74,9 +74,13 @@ checkgid_OBJECTS = checkgid.lo
  checkgid: $(checkgid_OBJECTS)
  	$(LINK) $(checkgid_LTFLAGS) $(checkgid_OBJECTS) $(PROGRAM_LDADD)
